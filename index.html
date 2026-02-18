@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Signature to Transparent PNG · official docs</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #f7f9fc 0%, #eef2f5 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    .app-card {
+      max-width: 1000px;
+      width: 100%;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 2.5rem;
+      box-shadow: 0 20px 40px -10px rgba(0,20,40,0.15), 0 2px 6px rgba(0,0,0,0.05);
+      padding: 2rem 2rem 2.5rem;
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      margin-top: 0;
+      margin-bottom: 0.4rem;
+      color: #0a2c3d;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    h1 span {
+      background: #0a2c3d;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .sub {
+      color: #3e5e6f;
+      font-size: 1rem;
+      margin-bottom: 1.8rem;
+      border-left: 4px solid #2b95c6;
+      padding-left: 1rem;
+      background: rgba(43,149,198,0.04);
+      border-radius: 0 12px 12px 0;
+      line-height: 1.4;
+    }
+    .upload-area {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+    .file-label {
+      background: #ffffff;
+      border: 2px dashed #a0c1d1;
+      border-radius: 60px;
+      padding: 0.6rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #0f4b5e;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .file-label:hover {
+      border-color: #2b95c6;
+      background: #f0f9ff;
+      box-shadow: 0 8px 14px rgba(43,149,198,0.1);
+    }
+    #upload {
+      display: none;
+    }
+    .canvas-container {
+      background: repeating-conic-gradient(#e0e7eb 0% 25%, #d0d9df 0% 50%) 50% / 20px 20px;
+      border-radius: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      border: 1px solid rgba(255,255,255,0.8);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02), inset 0 6px 12px rgba(0,0,0,0.02);
+      margin-bottom: 1.5rem;
+    }
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+      background: transparent;
+    }
+    .control-panel {
+      background: #ffffffd6;
+      backdrop-filter: blur(4px);
+      border-radius: 32px;
+      padding: 1.8rem 1.8rem 1.8rem;
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: 0 10px 20px -10px rgba(0,20,40,0.1);
+    }
+    .slider-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .threshold-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 2 1 260px;
+    }
+    .threshold-row label {
+      font-weight: 600;
+      color: #1a495a;
+      min-width: 80px;
+      font-size: 0.95rem;
+    }
+    #threshold {
+      flex: 1 1 180px;
+      height: 8px;
+      border-radius: 20px;
+      background: #dbe4e8;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    #threshold::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border: 2px solid #1a6c8a;
+      border-radius: 50%;
+      box-shadow: 0 4px 8px #1a6c8a33;
+      cursor: pointer;
+      transition: 0.08s;
+      border: 2px solid #0f4b5e;
+    }
+    #threshold::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+      background: #f0faff;
+    }
+    #thresholdValue {
+      background: #0f4b5e;
+      color: white;
+      padding: 0.2rem 0.9rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-width: 50px;
+      text-align: center;
+    }
+    .crop-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #e6f0f4;
+      padding: 0.45rem 1.2rem;
+      border-radius: 60px;
+      color: #0a2c3d;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .crop-check input {
+      width: 18px;
+      height: 18px;
+      accent-color: #1e7e9c;
+      border-radius: 6px;
+      margin: 0;
+    }
+    .btn-download {
+      background: #0f4b5e;
+      border: none;
+      color: white;
+      font-weight: 600;
+      font-size: 1.05rem;
+      padding: 0.9rem 2rem;
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.2s;
+      border: 1px solid rgba(255,255,255,0.2);
+      letter-spacing: 0.3px;
+      margin-top: 1.2rem;
+      box-shadow: 0 8px 16px -6px #0a2c3d4d;
+    }
+    .btn-download:hover {
+      background: #1e6e85;
+      transform: scale(1.01);
+      box-shadow: 0 14px 22px -10px #063142;
+    }
+    .btn-download:active {
+      transform: scale(0.98);
+    }
+    .note {
+      font-size: 0.8rem;
+      color: #3a606e;
+      margin-top: 1.2rem;
+      margin-bottom: 0;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .note i {
+      font-style: normal;
+      background: #dbeaf0;
+      padding: 0.2rem 0.7rem;
+      border-radius: 50px;
+    }
+    .footer-meta {
+      margin-top: 1rem;
+      color: #5e7e8c;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+<div class="app-card">
+
+  <h1>
+    ✍️ Sign2PNG 
+    <span>transparent</span>
+  </h1>
+  <div class="sub">
+    Upload a photo of your signature – white / light background works best. Dark ink stays, background becomes see‑through.
+  </div>
+
+  <!-- file input -->
+  <div class="upload-area">
+    <label for="upload" class="file-label">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Choose signature image
+    </label>
+    <input type="file" id="upload" accept="image/*">
+    <span style="color: #2b6f84; font-size: 0.9rem;">JPEG, PNG, HEIC, WEBP</span>
+  </div>
+
+  <!-- canvas preview with transparency background (checkered) -->
+  <div class="canvas-container">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <!-- controls -->
+  <div class="control-panel">
+    <div class="slider-container">
+      <div class="threshold-row">
+        <label>🔆 Threshold</label>
+        <input type="range" id="threshold" min="0" max="255" value="200" step="1">
+        <span id="thresholdValue">200</span>
+      </div>
+      <div class="crop-check">
+        <input type="checkbox" id="autoCrop" checked>
+        <label for="autoCrop">✂️ Auto‑crop to signature</label>
+      </div>
+    </div>
+
+    <button id="downloadBtn" class="btn-download">
+      ⬇️ Download transparent PNG
+      <span style="font-size: 0.9rem; opacity: 0.9;">(lossless)</span>
+    </button>
+    <div class="note">
+      <i>i</i> Move threshold until background disappears. Darker = more transparent. Auto‑crop removes empty space.
+    </div>
+  </div>
+  <div class="footer-meta">
+    ⚡ instant processing · no upload · pure browser
+  </div>
+</div>
+
+<script>
+  (function() {
+    'use strict';
+
+    // ----- UI elements -----
+    const fileInput = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const thresholdSlider = document.getElementById('threshold');
+    const thresholdValue = document.getElementById('thresholdValue');
+    const autoCropCheck = document.getElementById('autoCrop');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // ----- stored original image data (resized to max 1200px) -----
+    let originalImageData = null;       // ImageData object (with alpha = 255 for all pixels)
+    let originalWidth = 0;
+    let originalHeight = 0;
+
+    // ----- max dimension to keep performance & quality -----
+    const MAX_DIMENSION = 1200;
+
+    // ----- helper: scale dimensions preserving aspect ratio -----
+    function getScaledDimensions(width, height) {
+      if (width <= MAX_DIMENSION && height <= MAX_DIMENSION) {
+        return { width, height };
+      }
+      const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+      return {
+        width: Math.round(width * ratio),
+        height: Math.round(height * ratio)
+      };
+    }
+
+    // ----- process image: apply threshold + optional auto crop -----
+    function processImage() {
+      if (!originalImageData) return;
+
+      const threshold = parseInt(thresholdSlider.value, 10);
+      thresholdValue.textContent = threshold;
+
+      const doCrop = autoCropCheck.checked;
+
+      // 1) clone original imageData (we never mutate the stored base)
+      const srcData = originalImageData.data;
+      const w = originalImageData.width;
+      const h = originalImageData.height;
+
+      const processedData = new ImageData(
+        new Uint8ClampedArray(srcData), // copy pixel data
+        w,
+        h
+      );
+      const px = processedData.data;
+
+      // 2) apply luminance threshold: light pixels become transparent
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i];
+        const g = px[i + 1];
+        const b = px[i + 2];
+        // perceived luminance (Rec. 709)
+        const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (lum > threshold) {
+          px[i + 3] = 0;       // fully transparent
+        } else {
+          px[i + 3] = 255;     // keep original RGB, opaque signature
+        }
+      }
+
+      // 3) cropping if enabled
+      if (doCrop) {
+        // find bounding box of non‑transparent pixels (alpha > 0)
+        let minX = w, minY = h, maxX = 0, maxY = 0;
+        let hasOpaque = false;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4 + 3; // alpha index
+            if (px[idx] !== 0) {
+              hasOpaque = true;
+              if (x < minX) minX = x;
+              if (y < minY) minY = y;
+              if (x > maxX) maxX = x;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (hasOpaque && maxX >= minX && maxY >= minY) {
+          const cropWidth = maxX - minX + 1;
+          const cropHeight = maxY - minY + 1;
+
+          // create new ImageData for cropped area
+          const croppedData = new ImageData(cropWidth, cropHeight);
+          const dst = croppedData.data;
+
+          // copy pixels line by line (faster than per pixel loop)
+          for (let y = 0; y < cropHeight; y++) {
+            const srcY = minY + y;
+            const srcRowStart = (srcY * w + minX) * 4;
+            const dstRowStart = y * cropWidth * 4;
+            // copy whole row at once
+            const srcRow = px.subarray(srcRowStart, srcRowStart + cropWidth * 4);
+            dst.set(srcRow, dstRowStart);
+          }
+
+          // resize canvas to cropped dimensions and draw
+          canvas.width = cropWidth;
+          canvas.height = cropHeight;
+          ctx.putImageData(croppedData, 0, 0);
+        } else {
+          // no signature or all transparent: fallback to full processed
+          canvas.width = w;
+          canvas.height = h;
+          ctx.putImageData(processedData, 0, 0);
+        }
+      } else {
+        // no crop: just display full processed image
+        canvas.width = w;
+        canvas.height = h;
+        ctx.putImageData(processedData, 0, 0);
+      }
+    }
+
+    // ----- load image from file & store scaled original (opaque) -----
+    function loadImageFromFile(file) {
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // 1) scale to max 1200px for performance
+          const scaled = getScaledDimensions(img.width, img.height);
+          const sw = scaled.width;
+          const sh = scaled.height;
+
+          // 2) create an offscreen canvas to draw the original (opaque)
+          const offCanvas = new OffscreenCanvas(sw, sh);
+          const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+
+          // draw image scaled, preserve orientation, background white? No – we keep original bg.
+          // but we want to store the original pixels (including light background)
+          offCtx.drawImage(img, 0, 0, sw, sh);
+
+          // 3) store imageData (with alpha = 255 for every pixel – we enforce opaque)
+          const imgData = offCtx.getImageData(0, 0, sw, sh);
+          const px = imgData.data;
+          for (let i = 0; i < px.length; i += 4) {
+            px[i + 3] = 255;   // force opaque (if input had transparency, we flatten)
+          }
+
+          // 4) save as original reference
+          originalImageData = imgData;
+          originalWidth = sw;
+          originalHeight = sh;
+
+          // 5) first-time processing
+          processImage();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ----- event listeners -----
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        loadImageFromFile(file);
+      }
+    });
+
+    // live threshold update
+    thresholdSlider.addEventListener('input', () => {
+      thresholdValue.textContent = thresholdSlider.value;
+      if (originalImageData) {
+        processImage();
+      }
+    });
+
+    // autoCrop toggle
+    autoCropCheck.addEventListener('change', () => {
+      if (originalImageData) {
+        processImage();
+      }
+    });
+
+    // ----- download PNG with transparency -----
+    downloadBtn.addEventListener('click', (e) => {
+      if (!originalImageData) {
+        alert('Please upload a signature image first.');
+        return;
+      }
+
+      // use the displayed canvas (already processed & cropped)
+      const link = document.createElement('a');
+      link.download = 'signature_transparent.png'; // filename
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // ----- optional: drag & drop on container? (simple fallback) -----
+    // for convenience, allow click on label already works.
+
+    // ----- init default slider value display -----
+    thresholdValue.textContent = thresholdSlider.value;
+
+    // ----- preload a placeholder? maybe not, but show empty canvas.
+    // set a tiny 1x1 canvas to avoid "broken image" look.
+    canvas.width = 1;
+    canvas.height = 1;
+    ctx.clearRect(0, 0, 1, 1);
+  })();
+</script>
+
+<!-- 
+  pure frontend tool – converts signature to transparent PNG.
+  no data leaves your computer.
+-->
+</body>
+</html>
